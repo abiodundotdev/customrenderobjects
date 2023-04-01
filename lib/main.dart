@@ -36,10 +36,11 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        //mainAxisAlignment: MainAxisAlignment.start,
+        //crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           const Text("AASASSKJKJ"),
+          const Text("AAAA"),
           // Padding(padding: padding),
           CustomPadding(
             padding: const EdgeInsets.all(40.0),
@@ -114,6 +115,15 @@ class RenderCustomPadding extends RenderShiftedBox {
 
 class CustomParentData extends BoxParentData {}
 
+class CustomColumn extends MultiChildRenderObjectWidget {
+  CustomColumn({required List<Widget> children, Key? key})
+      : super(children: children, key: key);
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return CustomRenderColumn();
+  }
+}
+
 class CustomRenderColumn extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, CustomCoulmnParentData>,
@@ -124,13 +134,35 @@ class CustomRenderColumn extends RenderBox
   }
 
   @override
+  void performLayout() {
+    RenderBox? child = firstChild;
+    double width = 0;
+    double height = 0;
+    while (child != null) {
+      final CustomCoulmnParentData childParentData =
+          child.parentData! as CustomCoulmnParentData;
+      final _constraint = constraints.loosen();
+      child.layout(_constraint, parentUsesSize: true);
+      height += _constraint.maxHeight;
+      width += constraints.maxWidth;
+      childParentData.offset = Offset(0, child.size.height);
+      child = childParentData.nextSibling;
+    }
+    size = constraints.tighten(width: width, height: height).smallest;
+  }
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    return true;
+  }
+
+  @override
   void paint(PaintingContext context, Offset offset) {
     RenderBox? child = firstChild;
     while (child != null) {
       final CustomCoulmnParentData childParentData =
           child.parentData! as CustomCoulmnParentData;
       child.paint(context, offset + childParentData.offset);
-      assert(child.parentData == childParentData);
       child = childParentData.nextSibling;
     }
   }
