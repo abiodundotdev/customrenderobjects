@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:renderobjecttut/renderobjects/custom_render_proxy.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,20 +16,20 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const SliverHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+class BoxHomePage extends StatefulWidget {
+  const BoxHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<BoxHomePage> createState() => _BoxHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _BoxHomePageState extends State<BoxHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,121 +52,84 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           const Text("AASASSKJKJ"),
+          //SliverPadding(padding: padding),
         ],
       ),
     );
   }
 }
 
-class CustomPadding extends SingleChildRenderObjectWidget {
-  final EdgeInsets padding;
-  const CustomPadding({Key? key, required Widget child, required this.padding})
-      : super(child: child, key: key);
+class SliverHomePage extends StatefulWidget {
+  const SliverHomePage({Key, key}) : super(key: key);
+
   @override
-  RenderObject createRenderObject(BuildContext context) {
-    return RenderCustomPadding(padding: padding);
+  State<SliverHomePage> createState() => _SliverHomePageState();
+}
+
+class _SliverHomePageState extends State<SliverHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: CustomHeaderDelegate(),
+        ),
+        SliverFillRemaining(
+          child: Container(
+            color: Colors.green,
+            child: const Text("Fill remainingggg"),
+          ),
+        )
+      ],
+    );
   }
 }
 
-class CustomRenderBox extends RenderProxyBox {
+class CustomHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double _maxExtent = kToolbarHeight * 5;
+  final double _minExtent = kToolbarHeight;
   @override
-  void paint(PaintingContext context, Offset offset) {
-    final path = Path();
-    final paint = Paint()
-      ..color = Colors.green
-      ..strokeWidth = 20.0
-      ..style = PaintingStyle.stroke;
-    path.lineTo(offset.dx + 200, offset.dy + 200);
-    context.canvas.drawPath(path, paint);
-  }
-}
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    var _currentExtent = _maxExtent - shrinkOffset;
+    var allowableSrollextent = _maxExtent - _minExtent;
 
-class RenderCustomPadding extends RenderShiftedBox {
-  final EdgeInsets padding;
-  RenderCustomPadding({RenderBox? child, required this.padding}) : super(child);
+    print(_currentExtent);
 
-  @override
-  void performLayout() {
-    if (child != null) {
-      child!.layout(constraints.loosen());
-      final BoxParentData childParentData = child!.parentData! as BoxParentData;
-      childParentData.offset = Offset(padding.left, padding.top);
-      size = constraints.smallest;
-    }
-  }
+    bool isShinkedToToolbar = _currentExtent <= _minExtent;
+    final _intValue =
+        interpolationCalulator(0, allowableSrollextent, 0, 1, _currentExtent);
 
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    if (child != null) {
-      final BoxParentData childParentData = child!.parentData! as BoxParentData;
-      context.paintChild(child!, childParentData.offset + offset);
-    }
+    print(_intValue);
+
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: _currentExtent,
+      decoration: BoxDecoration(
+        color: Colors.red,
+      ),
+      child: Align(
+        alignment: Alignment(0, 0),
+        child: Text("data"),
+      ),
+    );
   }
 
   @override
-  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+  double get maxExtent => _maxExtent;
+
+  @override
+  double get minExtent => _minExtent;
+
+  @override
+  bool shouldRebuild(covariant CustomHeaderDelegate oldDelegate) {
     return true;
   }
-
-  // @override
-  // Size computeDryLayout(BoxConstraints constraints) {
-  //   return constraints.smallest;
-  // }
 }
 
-class CustomParentData extends BoxParentData {}
-
-class CustomColumn extends MultiChildRenderObjectWidget {
-  CustomColumn({required List<Widget> children, Key? key})
-      : super(children: children, key: key);
-  @override
-  RenderObject createRenderObject(BuildContext context) {
-    return CustomRenderColumn();
-  }
+double interpolationCalulator(
+    double x1, double y1, double x2, double y2, double value) {
+  final _intValue = y1 + ((value - x1) / (x2 - x1)) * (y2 - y1);
+  return _intValue;
 }
-
-class CustomRenderColumn extends RenderBox
-    with
-        ContainerRenderObjectMixin<RenderBox, CustomCoulmnParentData>,
-        RenderBoxContainerDefaultsMixin<RenderBox, CustomCoulmnParentData> {
-  @override
-  void setupParentData(covariant RenderObject child) {
-    child.parentData = CustomCoulmnParentData();
-  }
-
-  @override
-  void performLayout() {
-    RenderBox? child = firstChild;
-    double width = 0;
-    double height = 0;
-    while (child != null) {
-      final CustomCoulmnParentData childParentData =
-          child.parentData! as CustomCoulmnParentData;
-      final _constraint = constraints.loosen();
-      child.layout(_constraint, parentUsesSize: true);
-      height += _constraint.maxHeight;
-      width += constraints.maxWidth;
-      childParentData.offset = Offset(0, child.size.height);
-      child = childParentData.nextSibling;
-    }
-    size = constraints.tighten(width: width, height: height).smallest;
-  }
-
-  @override
-  bool hitTest(BoxHitTestResult result, {required Offset position}) {
-    return true;
-  }
-
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    RenderBox? child = firstChild;
-    while (child != null) {
-      final CustomCoulmnParentData childParentData =
-          child.parentData! as CustomCoulmnParentData;
-      child.paint(context, offset + childParentData.offset);
-      child = childParentData.nextSibling;
-    }
-  }
-}
-
-class CustomCoulmnParentData extends ContainerBoxParentData<RenderBox> {}
