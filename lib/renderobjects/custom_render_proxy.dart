@@ -34,7 +34,8 @@ class RenderCustomPadding extends RenderShiftedBox {
       child!.layout(constraints.loosen());
       final BoxParentData childParentData = child!.parentData! as BoxParentData;
       childParentData.offset = Offset(padding.left, padding.top);
-      size = constraints.smallest;
+      //size = constraints.smallest;
+      size = child?.size ?? constraints.smallest;
     }
   }
 
@@ -111,6 +112,66 @@ class CustomRenderColumn extends RenderBox
       child = childParentData.nextSibling;
     }
   }
+
+  @override
+  double computeMinIntrinsicWidth(double height) {
+    double minIntrinsicWidth = 0.0;
+    RenderBox? child = firstChild;
+    while (child != null) {
+      if (child.size.width > minIntrinsicWidth) {
+        minIntrinsicWidth = child.getMinIntrinsicWidth(height);
+      }
+      final CustomCoulmnParentData childParentData =
+          child.parentData! as CustomCoulmnParentData;
+      child = childParentData.nextSibling;
+    }
+    return minIntrinsicWidth;
+  }
+
+  @override
+  double computeMaxIntrinsicWidth(double height) {
+    double maxIntrinsicWidth = 0.0;
+    RenderBox? child = firstChild;
+    while (child != null) {
+      if (child.size.width > maxIntrinsicWidth) {
+        maxIntrinsicWidth = child.getMaxIntrinsicWidth(height);
+      }
+      final CustomCoulmnParentData childParentData =
+          child.parentData! as CustomCoulmnParentData;
+      child = childParentData.nextSibling;
+    }
+    return maxIntrinsicWidth;
+  }
+
+  @override
+  double computeMaxIntrinsicHeight(double width) {
+    double maxIntrinsicWidth = 0.0;
+    RenderBox? child = firstChild;
+    while (child != null) {
+      if (child.size.width > maxIntrinsicWidth) {
+        maxIntrinsicWidth = child.getMaxIntrinsicHeight(width);
+      }
+      final CustomCoulmnParentData childParentData =
+          child.parentData! as CustomCoulmnParentData;
+      child = childParentData.nextSibling;
+    }
+    return maxIntrinsicWidth;
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) {
+    double maxIntrinsicWidth = 0.0;
+    RenderBox? child = firstChild;
+    while (child != null) {
+      if (child.size.width > maxIntrinsicWidth) {
+        maxIntrinsicWidth = child.getMinIntrinsicHeight(width);
+      }
+      final CustomCoulmnParentData childParentData =
+          child.parentData! as CustomCoulmnParentData;
+      child = childParentData.nextSibling;
+    }
+    return maxIntrinsicWidth;
+  }
 }
 
 class CustomCoulmnParentData extends ContainerBoxParentData<RenderBox> {}
@@ -118,6 +179,6 @@ class CustomCoulmnParentData extends ContainerBoxParentData<RenderBox> {}
 class CustomRenderSliver extends RenderSliver with RenderObjectWithChildMixin {
   @override
   void performLayout() {
-    geometry;
+    print(constraints.cacheOrigin);
   }
 }
